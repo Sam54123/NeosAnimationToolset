@@ -22,7 +22,7 @@ namespace RecordingTool
 
         public void OnStart(RecordingTool rt) {
             AnimX animx = rt.animation;
-            Type type = field.TargetType;
+            Type type = field.Target.ValueType;
             if (type == typeof(float)){ floatTrack = animx.AddTrack<CurveFloatAnimationTrack>(); return; }
             if (type == typeof(float2)){ float2Track = animx.AddTrack<CurveFloat2AnimationTrack>(); return; }
             if (type == typeof(float3)){ float3Track = animx.AddTrack<CurveFloat3AnimationTrack>(); return; }
@@ -39,7 +39,7 @@ namespace RecordingTool
         public void OnUpdate(float t)
         {
             IField target = field.Target;
-            Type type = field.TargetType;
+            Type type = field.Target.ValueType;
             if (type == typeof(float)) floatTrack.InsertKeyFrame((float)target.BoxedValue, t);
             if (type == typeof(float2)) float2Track.InsertKeyFrame((float2)target.BoxedValue, t);
             if (type == typeof(float3)) float3Track.InsertKeyFrame((float3)target.BoxedValue, t);
