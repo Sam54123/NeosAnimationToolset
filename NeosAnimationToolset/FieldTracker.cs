@@ -2,7 +2,7 @@
 using FrooxEngine;
 using System;
 
-namespace RecordingTool
+namespace NeosAnimationToolset
 {
     public class FieldTracker : SyncObject, ITrackable
     {

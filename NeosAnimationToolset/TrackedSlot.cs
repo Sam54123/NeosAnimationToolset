@@ -1,7 +1,7 @@
 ﻿using FrooxEngine;
 using BaseX;
 
-namespace RecordingTool
+namespace NeosAnimationToolset
 {
     public class TrackedSlot : SyncObject, ITrackable
     {

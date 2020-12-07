@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FrooxEngine.UIX;
 
-namespace RecordingTool
+namespace NeosAnimationToolset
 {
     public enum ResultTypeEnum
     {

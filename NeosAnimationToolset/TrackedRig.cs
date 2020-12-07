@@ -1,6 +1,6 @@
 ﻿using FrooxEngine;
 
-namespace RecordingTool
+namespace NeosAnimationToolset
 {
     public class TrackedRig : SyncObject, ITrackable
     {
