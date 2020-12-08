@@ -20,8 +20,8 @@ namespace NeosAnimationToolset
         public CurveAnimationTrack<string> stringTrack;
         public CurveAnimationTrack<color> colorTrack;
 
-        public void OnStart(RecordingTool rt) {
-            AnimX animx = rt.animation;
+        public void OnStart(AnimationCapture animCapture) {
+            AnimX animx = animCapture.Animation;
             Type type = field.Target.ValueType;
             if (type == typeof(float)){ floatTrack = animx.AddTrack<CurveFloatAnimationTrack>(); return; }
             if (type == typeof(float2)){ float2Track = animx.AddTrack<CurveFloat2AnimationTrack>(); return; }

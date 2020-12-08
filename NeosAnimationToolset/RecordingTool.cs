@@ -62,7 +62,7 @@ namespace NeosAnimationToolset
 
         public override void OnPrimaryPress()
         {
-            if (state.Value == 3)
+/*            if (state.Value == 3)
             {
                 Animator animator = rootSlot.Target.AttachComponent<Animator>();
                 animator.Clip.Target = _result.Target;
@@ -85,7 +85,7 @@ namespace NeosAnimationToolset
                 foreach (TrackedRig it in recordedRigs) { it.OnStart(this); }
                 foreach (TrackedSlot it in recordedSlots) { it.OnStart(this); }
                 foreach (FieldTracker it in recordedFields) { it.OnStart(this); }
-            }
+            }*/
         }
 
         protected override void OnCommonUpdate()

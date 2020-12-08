@@ -1,4 +1,7 @@
-﻿using FrooxEngine;
+﻿using System;
+using System.Collections.Generic;
+
+using FrooxEngine;
 
 namespace NeosAnimationToolset
 {
@@ -10,20 +13,21 @@ namespace NeosAnimationToolset
         public readonly Sync<bool> scale;
         public readonly Sync<ResultTypeEnum> ResultType;
         public readonly SyncRefList<SkinnedMeshRenderer> meshes;
-        public RecordingTool _rt;
+        public AnimationCapture AnimCapture;
 
 
-        public void OnStart(RecordingTool rt)
+        public void OnStart(AnimationCapture animCapture)
         {
             if (rig.Target == null) return;
-            _rt = rt;
+            this.AnimCapture = animCapture;
             bool pos = position.Value;
             bool rot = rotation.Value;
             bool scl = scale.Value;
             //bonezs = new Bonez[rig.Target.Bones.Count];
             foreach (Slot bone in rig.Target.Bones)
             {
-                TrackedSlot s = rt.recordedSlots.Add();
+                TrackedSlot s = new TrackedSlot();
+                AnimCapture.RecordedSlots.Add(s);
                 s.slot.Target = bone;
                 s.position.Value = pos;
                 s.rotation.Value = rot;
@@ -45,9 +49,9 @@ namespace NeosAnimationToolset
         public void OnReplace(Animator anim) { }
         public void Clean()
         {
-            SyncList<TrackedSlot> rss = _rt.recordedSlots;
-            foreach (TrackedSlot it in rss) { it.Clean(); }
-            rss.RemoveAll((it) => { return it.addedByRig; });
+            List<TrackedSlot> slots = AnimCapture.RecordedSlots;
+            foreach (TrackedSlot it in slots) { it.Clean(); }
+            slots.RemoveAll((it) => { return it.addedByRig; });
         }
     }
 }

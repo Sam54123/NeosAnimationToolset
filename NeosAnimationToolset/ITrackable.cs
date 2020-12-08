@@ -4,7 +4,7 @@ namespace NeosAnimationToolset
 {
     public interface ITrackable
     {
-        void OnStart(RecordingTool rt);
+        void OnStart(AnimationCapture animCapture);
         void OnUpdate(float T);
         void OnStop();
         void OnReplace(Animator anim);

@@ -17,23 +17,23 @@ namespace NeosAnimationToolset
         public readonly SyncRefList<SyncRef<Slot>> references;
         public readonly SyncList<SlotListReference> listReferences;
         public readonly Sync<ResultTypeEnum> ResultType;
-        public RecordingTool _rt;
+        public AnimationCapture AnimCapture;
         public bool addedByRig = false;
 
         public CurveFloat3AnimationTrack positionTrack;
         public CurveFloatQAnimationTrack rotationTrack;
         public CurveFloat3AnimationTrack scaleTrack;
 
-        public void OnStart(RecordingTool rt)
+        public void OnStart(AnimationCapture animCapture)
         {
-            _rt = rt;
-            if (position.Value) positionTrack = rt.animation.AddTrack<CurveFloat3AnimationTrack>();
-            if (rotation.Value) rotationTrack = rt.animation.AddTrack<CurveFloatQAnimationTrack>();
-            if (scale.Value) scaleTrack = rt.animation.AddTrack<CurveFloat3AnimationTrack>();
+            this.AnimCapture = animCapture;
+            if (position.Value) positionTrack = animCapture.Animation.AddTrack<CurveFloat3AnimationTrack>();
+            if (rotation.Value) rotationTrack = animCapture.Animation.AddTrack<CurveFloatQAnimationTrack>();
+            if (scale.Value) scaleTrack = animCapture.Animation.AddTrack<CurveFloat3AnimationTrack>();
         }
         public void OnUpdate(float T)
         {
-            Slot ruut = _rt.rootSlot.Target;
+            Slot ruut = AnimCapture.RootSlot;
             positionTrack?.InsertKeyFrame(ruut.GlobalPointToLocal(slot.Target?.GlobalPosition ?? float3.Zero), T);
             rotationTrack?.InsertKeyFrame(ruut.GlobalRotationToLocal(slot.Target?.GlobalRotation ?? floatQ.Identity), T);
             scaleTrack?.InsertKeyFrame(ruut.GlobalScaleToLocal(slot.Target?.GlobalScale ?? float3.Zero), T);
@@ -41,7 +41,7 @@ namespace NeosAnimationToolset
         public void OnStop() { }
         public void OnReplace(Animator anim)
         {
-            Slot root = _rt.rootSlot.Target;
+            Slot root = AnimCapture.RootSlot;
             ResultTypeEnum rte = ResultType.Value;
             if (rte == ResultTypeEnum.DO_NOTHING)
             {
