@@ -9,19 +9,23 @@ using FrooxEngine;
 
 namespace NeosAnimationToolset
 {
-    public class AnimationCapture
+    public enum RecordingState { Idle, Recording, Saving, Cached }
+    public class AnimationCapture : SyncObject
     {
-        public readonly World World;
-        public enum RecordingState { Idle, Recording, Saving, Cached }
+        /*
+         * Note: this class is synced because it's required that all clients know if it's recording and who's doing it.
+         * State and Recording user are the ONLY values that are synced, because they're the only values that matter to
+         * all clients during recording. All other synced values are handled by the parent component 
+         */
 
         /// <summary>
         /// The last animation that was recorded. Make sure to back up before recording again.
         /// </summary>
         public AnimX Animation;
 
-        public readonly List<TrackedRig> RecordedRigs;
-        public readonly List<TrackedSlot> RecordedSlots;
-        public readonly List<FieldTracker> RecordedFields;
+        public readonly List<TrackedRig> RecordedRigs = new List<TrackedRig>();
+        public readonly List<TrackedSlot> RecordedSlots = new List<TrackedSlot>();
+        public readonly List<FieldTracker> RecordedFields = new List<FieldTracker>();
 
         /// <summary>
         /// The Static Animation Provider to put the animation into when complete.
@@ -30,24 +34,30 @@ namespace NeosAnimationToolset
 
         public Slot RootSlot;
 
-        public RecordingState State { get; private set; }
+        public readonly Sync<RecordingState> State;
+        public readonly SyncRef<User> RecordingUser;
 
         /// <summary>
         /// The time at which the recording was started.
         /// </summary>
         public double StartTime { get; private set; }
 
-        public AnimationCapture(World world)
+        public bool CanRecord
         {
-            this.World = world;
+            get
+            {
+                return State.Value == RecordingState.Idle || State.Value == RecordingState.Cached;
+            }
+            
         }
 
         public void StartRecording()
         {
-            if (State == RecordingState.Recording || State == RecordingState.Saving) { return; }
+            if (!CanRecord) return;
 
             Animation = new AnimX();
-            State = RecordingState.Recording;
+            State.Value = RecordingState.Recording;
+            RecordingUser.Target = LocalUser;
             StartTime = World.Time.WorldTime;
 
             foreach (TrackedRig it in RecordedRigs) { it.OnStart(this); }
@@ -57,10 +67,10 @@ namespace NeosAnimationToolset
 
         public void StopRecording()
         {
-            if (State == RecordingState.Recording)
+            if (State.Value == RecordingState.Recording && RecordingUser.Target == LocalUser)
             {
-                State = RecordingState.Saving;
-                Task.Run(BakeAsync);
+                State.Value = RecordingState.Saving;
+                StartTask(BakeAsync);
             }
         }
 
@@ -69,14 +79,14 @@ namespace NeosAnimationToolset
         /// </summary>
         public void Deploy()
         {
-            if (State == RecordingState.Cached)
+            if (State.Value == RecordingState.Cached && RecordingUser.Target == LocalUser)
             {
                 Animator animator = RootSlot.AttachComponent<Animator>();
                 animator.Clip.Target = Output;
                 foreach (TrackedRig it in RecordedRigs) { it.OnReplace(animator); it.Clean(); }
                 foreach (TrackedSlot it in RecordedSlots) { it.OnReplace(animator); it.Clean(); }
                 foreach (FieldTracker it in RecordedFields) { it.OnReplace(animator); it.Clean(); }
-                State = RecordingState.Idle;
+                State.Value = RecordingState.Idle;
             }
         }
 
@@ -85,7 +95,7 @@ namespace NeosAnimationToolset
         /// </summary>
         public void Update()
         {
-            if (State == RecordingState.Recording)
+            if (State.Value == RecordingState.Recording && RecordingUser.Target == LocalUser)
             {
                 float t = (float)(World.Time.WorldTime - StartTime);
                 foreach (TrackedRig it in RecordedRigs) { it.OnUpdate(t); }
@@ -111,7 +121,7 @@ namespace NeosAnimationToolset
 
             await default(ToWorld);
             if (Output != null) { Output.URL.Value = uri; }
-            State = RecordingState.Cached;
+            State.Value = RecordingState.Cached;
         }
     }
 }

@@ -17,23 +17,24 @@ namespace NeosAnimationToolset
     [Category("Tools/Tooltips")]
     public partial class RecordingTool : ToolTip
     {
-        public readonly SyncRef<User> recordingUser;
-
-        public readonly Sync<int> state;
-
-        public readonly Sync<double> _startTime;
-
         public AnimX animation;
 
-        public readonly SyncRef<Slot> rootSlot;
+        public readonly SyncRef<Slot> RootSlot;
+        public readonly SyncList<TrackedRig> RecordedRigs;
+        public readonly SyncList<TrackedSlot> RecordedSlots;
+        public readonly SyncList<FieldTracker> RecordedFields;
+        public readonly SyncRef<StaticAnimationProvider> Output;
 
-        public readonly SyncList<TrackedRig> recordedRigs;
+        public Sync<AnimationCapture> AnimationCapture;
 
-        public readonly SyncList<TrackedSlot> recordedSlots;
+        public AnimationCapture AnimCapture
+        {
+            get
+            {
+                return AnimationCapture.Value;
+            }
+        }
 
-        public readonly SyncList<FieldTracker> recordedFields;
-
-        public readonly SyncRef<StaticAnimationProvider> _result;
 
         protected override void OnAttach()
         {
@@ -53,7 +54,6 @@ namespace NeosAnimationToolset
             vm.Values.Add(new color(0.5f, 0, 0, 1));
             vm.Values.Add(new color(0.5f, 0.5f, 0, 1));
             vm.Values.Add(new color(0, 0, 0.5f, 1));
-            vm.Index.DriveFrom<int>(state);
 
             CylinderMesh mesh = visual.AttachMesh<CylinderMesh>(material);
             mesh.Radius.Value = 0.015f;
@@ -62,66 +62,46 @@ namespace NeosAnimationToolset
 
         public override void OnPrimaryPress()
         {
-/*            if (state.Value == 3)
+            if (AnimCapture.State.Value == RecordingState.Idle)
             {
-                Animator animator = rootSlot.Target.AttachComponent<Animator>();
-                animator.Clip.Target = _result.Target;
-                foreach (TrackedRig it in recordedRigs) { it.OnReplace(animator); it.Clean(); }
-                foreach (TrackedSlot it in recordedSlots) { it.OnReplace(animator); it.Clean(); }
-                foreach (FieldTracker it in recordedFields) { it.OnReplace(animator); it.Clean(); }
-                state.Value = 0;
+                StartRecording();
             }
-            else if (state.Value == 1)
+            else if (AnimCapture.State.Value == RecordingState.Recording) 
             {
-                state.Value = 2;
-                StartTask(bakeAsync);
+                AnimCapture.StopRecording();
             }
-            else if (state.Value == 0)
+            else if (AnimCapture.State.Value == RecordingState.Cached)
             {
-                animation = new AnimX(1f);
-                recordingUser.Target = LocalUser;
-                state.Value = 1;
-                _startTime.Value = base.Time.WorldTime;
-                foreach (TrackedRig it in recordedRigs) { it.OnStart(this); }
-                foreach (TrackedSlot it in recordedSlots) { it.OnStart(this); }
-                foreach (FieldTracker it in recordedFields) { it.OnStart(this); }
-            }*/
+                AnimCapture.Deploy();
+            }
+        }
+
+        public void StartRecording()
+        {
+            if (AnimCapture.CanRecord)
+            {
+                // Load recorded items.
+                AnimCapture.RootSlot = RootSlot.Target;
+                AnimCapture.Output = Output.Target;
+
+                AnimCapture.RecordedRigs.Clear();
+                foreach (TrackedRig rig in RecordedRigs) { AnimCapture.RecordedRigs.Add(rig); }
+
+                AnimCapture.RecordedSlots.Clear();
+                foreach (TrackedSlot slot in RecordedSlots) { AnimCapture.RecordedSlots.Add(slot); }
+
+                AnimCapture.RecordedFields.Clear();
+                foreach (FieldTracker field in RecordedFields) { AnimCapture.RecordedFields.Add(field); }
+
+                AnimCapture.StartRecording();
+            }
         }
 
         protected override void OnCommonUpdate()
         {
             base.OnCommonUpdate();
 
-            if (state.Value != 1) return;
-            User usr = recordingUser.Target;
-            if (usr == LocalUser)
-            {
-                float t = (float)(base.Time.WorldTime - _startTime);
-                foreach (TrackedRig it in recordedRigs) { it.OnUpdate(t); }
-                foreach (TrackedSlot it in recordedSlots) { it.OnUpdate(t); }
-                foreach (FieldTracker it in recordedFields) { it.OnUpdate(t); }
-            }
-        }
-
-        protected async Task bakeAsync()
-        {
-            Slot root = rootSlot.Target;
-            float t = (float)(base.Time.WorldTime - _startTime);
-            animation.GlobalDuration = t;
-
-            foreach (TrackedRig rig in recordedRigs) { rig.OnUpdate(t); rig.OnStop(); }
-            foreach (TrackedSlot slot in recordedSlots) { slot.OnUpdate(t); slot.OnStop(); }
-            foreach (FieldTracker field in recordedFields) { field.OnUpdate(t); field.OnStop(); }
-            await default(ToBackground);
-
-            string tempFilePath = Engine.LocalDB.GetTempFilePath("animx");
-            animation.SaveToFile(tempFilePath);
-            Uri uri = Engine.LocalDB.ImportLocalAsset(tempFilePath, LocalDB.ImportLocation.Move);
-
-            await default(ToWorld);
-            _result.Target = (root ?? Slot).AttachComponent<StaticAnimationProvider>();
-            _result.Target.URL.Value = uri;
-            state.Value = 3;
+            AnimCapture.Update();
         }
     }
 }
