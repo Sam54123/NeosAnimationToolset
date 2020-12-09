@@ -25,16 +25,26 @@ namespace NeosAnimationToolset
         public readonly SyncList<FieldTracker> RecordedFields;
         public readonly SyncRef<StaticAnimationProvider> Output;
 
-        public Sync<AnimationCapture> AnimationCapture;
+        public readonly AnimationCapture AnimCapture;
 
-        public AnimationCapture AnimCapture
+        /*public AnimationCapture AnimCapture
         {
             get
             {
-                return AnimationCapture.Value;
+                return AnimationCapture.Target;
             }
-        }
+        }*/
 
+        protected override void OnAwake()
+        {
+            base.OnAwake();
+
+            /*World.ReferenceController.LocalAllocationBlockBegin();
+            AnimationCapture capture = new AnimationCapture();
+            capture.Initialize(this.World, this);
+            AnimationCapture.Target = capture;
+            World.ReferenceController.LocalAllocationBlockEnd();*/
+        }
 
         protected override void OnAttach()
         {
@@ -100,7 +110,6 @@ namespace NeosAnimationToolset
         protected override void OnCommonUpdate()
         {
             base.OnCommonUpdate();
-
             AnimCapture.Update();
         }
     }
