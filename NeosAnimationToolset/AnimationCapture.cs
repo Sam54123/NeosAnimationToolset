@@ -83,9 +83,26 @@ namespace NeosAnimationToolset
             {
                 Animator animator = RootSlot.AttachComponent<Animator>();
                 animator.Clip.Target = Output;
-                foreach (TrackedRig it in RecordedRigs) { it.OnReplace(animator); it.Clean(); }
-                foreach (TrackedSlot it in RecordedSlots) { it.OnReplace(animator); it.Clean(); }
-                foreach (FieldTracker it in RecordedFields) { it.OnReplace(animator); it.Clean(); }
+                foreach (TrackedRig it in RecordedRigs) { it.OnReplace(animator); }
+                foreach (TrackedSlot it in RecordedSlots) { it.OnReplace(animator); }
+                foreach (FieldTracker it in RecordedFields) { it.OnReplace(animator); }
+                Clean();
+            } 
+            else
+            {
+                Clean();
+            }
+        }
+
+        public void Clean()
+        {
+            if (State.Value == RecordingState.Cached && RecordingUser.Target == LocalUser)
+            {
+                Animator animator = RootSlot.AttachComponent<Animator>();
+                animator.Clip.Target = Output;
+                foreach (TrackedRig it in RecordedRigs) { it.Clean(); }
+                foreach (TrackedSlot it in RecordedSlots) { it.Clean(); }
+                foreach (FieldTracker it in RecordedFields) { it.Clean(); }
                 State.Value = RecordingState.Idle;
             }
         }
