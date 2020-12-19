@@ -59,15 +59,15 @@ namespace NeosAnimationToolset
 
         public override void OnPrimaryPress()
         {
-            if (AnimCapture.State.Value == RecordingState.Idle)
+            if (AnimCapture._state.Value == RecordingState.Idle)
             {
                 StartRecording();
             }
-            else if (AnimCapture.State.Value == RecordingState.Recording) 
+            else if (AnimCapture._state.Value == RecordingState.Recording) 
             {
                 AnimCapture.StopRecording();
             }
-            else if (AnimCapture.State.Value == RecordingState.Cached)
+            else if (AnimCapture._state.Value == RecordingState.Cached)
             {
                 AnimCapture.Deploy();
             }
