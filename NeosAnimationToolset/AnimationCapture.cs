@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using NeosAnimationToolset.Trackers;
 using BaseX;
 using FrooxEngine;
 
@@ -24,8 +25,9 @@ namespace NeosAnimationToolset
         public AnimX Animation;
 
         public readonly List<TrackedRig> RecordedRigs = new List<TrackedRig>();
-        public readonly List<TrackedSlot> RecordedSlots = new List<TrackedSlot>();
+        public readonly List<SlotTracker> RecordedSlots = new List<SlotTracker>();
         public readonly List<FieldTracker> RecordedFields = new List<FieldTracker>();
+
 
         /// <summary>
         /// The Static Animation Provider to put the animation into when complete.
@@ -61,7 +63,7 @@ namespace NeosAnimationToolset
             StartTime = World.Time.WorldTime;
 
             foreach (TrackedRig it in RecordedRigs) { it.OnStart(this); }
-            foreach (TrackedSlot it in RecordedSlots) { it.OnStart(this); }
+            foreach (SlotTracker it in RecordedSlots) { it.OnStart(this); }
             foreach (FieldTracker it in RecordedFields) { it.OnStart(this); }
         }
 
@@ -84,7 +86,7 @@ namespace NeosAnimationToolset
                 Animator animator = RootSlot.AttachComponent<Animator>();
                 animator.Clip.Target = Output;
                 foreach (TrackedRig it in RecordedRigs) { it.OnReplace(animator); }
-                foreach (TrackedSlot it in RecordedSlots) { it.OnReplace(animator); }
+                foreach (SlotTracker it in RecordedSlots) { it.OnReplace(animator); }
                 foreach (FieldTracker it in RecordedFields) { it.OnReplace(animator); }
                 Clean();
             } 
@@ -101,10 +103,11 @@ namespace NeosAnimationToolset
                 Animator animator = RootSlot.AttachComponent<Animator>();
                 animator.Clip.Target = Output;
                 foreach (TrackedRig it in RecordedRigs) { it.Clean(); }
-                foreach (TrackedSlot it in RecordedSlots) { it.Clean(); }
+                foreach (SlotTracker it in RecordedSlots) { it.Clean(); }
                 foreach (FieldTracker it in RecordedFields) { it.Clean(); }
                 _state.Value = RecordingState.Idle;
             }
+
         }
 
         /// <summary>
@@ -116,7 +119,7 @@ namespace NeosAnimationToolset
             {
                 float t = (float)(World.Time.WorldTime - StartTime);
                 foreach (TrackedRig it in RecordedRigs) { it.OnUpdate(t); }
-                foreach (TrackedSlot it in RecordedSlots) { it.OnUpdate(t); }
+                foreach (SlotTracker it in RecordedSlots) { it.OnUpdate(t); }
                 foreach (FieldTracker it in RecordedFields) { it.OnUpdate(t); }
             }
         }
@@ -127,7 +130,7 @@ namespace NeosAnimationToolset
             Animation.GlobalDuration = t;
 
             foreach (TrackedRig rig in RecordedRigs) { rig.OnUpdate(t); rig.OnStop(); }
-            foreach (TrackedSlot slot in RecordedSlots) { slot.OnUpdate(t); slot.OnStop(); }
+            foreach (SlotTracker slot in RecordedSlots) { slot.OnUpdate(t); slot.OnStop(); }
             foreach (FieldTracker field in RecordedFields) { field.OnUpdate(t); field.OnStop(); }
 
             await default(ToBackground);

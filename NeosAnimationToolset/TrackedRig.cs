@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using FrooxEngine;
 
+using NeosAnimationToolset.Trackers;
+
 namespace NeosAnimationToolset
 {
     public class TrackedRig : SyncObject, ITrackable
@@ -26,20 +28,18 @@ namespace NeosAnimationToolset
             //bonezs = new Bonez[rig.Target.Bones.Count];
             foreach (Slot bone in rig.Target.Bones)
             {
-                TrackedSlot s = new TrackedSlot();
+                SlotTracker s = new SlotTracker(bone, true);
                 AnimCapture.RecordedSlots.Add(s);
-                s.slot.Target = bone;
-                s.position.Value = pos;
-                s.rotation.Value = rot;
-                s.addedByRig = true;
-                s.scale.Value = scl;
+                s.Position = pos;
+                s.Rotation = rot;
+                s.Scale = scl;
                 foreach (SkinnedMeshRenderer smr in meshes)
                 {
                     for (int i = 0; i < smr.Bones.Count; i++)
                     {
-                        TrackedSlot.SlotListReference slr = s.listReferences.Add();
+                        /*TrackedSlot.SlotListReference slr = s.ListReferences.Add();
                         slr.list.Target = smr.Bones;
-                        slr.index.Value = i;
+                        slr.index.Value = i;*/
                     }
                 }
             }
@@ -49,9 +49,9 @@ namespace NeosAnimationToolset
         public void OnReplace(Animator anim) { }
         public void Clean()
         {
-            List<TrackedSlot> slots = AnimCapture.RecordedSlots;
-            foreach (TrackedSlot it in slots) { it.Clean(); }
-            slots.RemoveAll((it) => { return it.addedByRig; });
+            List<SlotTracker> slots = AnimCapture.RecordedSlots;
+            foreach (SlotTracker it in slots) { it.Clean(); }
+            slots.RemoveAll((it) => { return it.AddedByRig; });
         }
     }
 }

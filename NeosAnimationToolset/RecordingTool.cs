@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using FrooxEngine.UIX;
 
+using NeosAnimationToolset.Trackers;
+
 namespace NeosAnimationToolset
 {
     public enum ResultTypeEnum
@@ -85,7 +87,7 @@ namespace NeosAnimationToolset
                 foreach (TrackedRig rig in RecordedRigs) { AnimCapture.RecordedRigs.Add(rig); }
 
                 AnimCapture.RecordedSlots.Clear();
-                foreach (TrackedSlot slot in RecordedSlots) { AnimCapture.RecordedSlots.Add(slot); }
+                foreach (TrackedSlot slot in RecordedSlots) { AnimCapture.RecordedSlots.Add(new SlotTracker(slot)); }
 
                 AnimCapture.RecordedFields.Clear();
                 foreach (FieldTracker field in RecordedFields) { AnimCapture.RecordedFields.Add(field); }

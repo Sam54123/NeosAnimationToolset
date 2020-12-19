@@ -3,7 +3,7 @@ using BaseX;
 
 namespace NeosAnimationToolset
 {
-    public class TrackedSlot : SyncObject, ITrackable
+    public class TrackedSlot : SyncObject
     {
         public class SlotListReference : SyncObject
         {
@@ -20,69 +20,5 @@ namespace NeosAnimationToolset
         public AnimationCapture AnimCapture;
         public bool addedByRig = false;
 
-        public CurveFloat3AnimationTrack positionTrack;
-        public CurveFloatQAnimationTrack rotationTrack;
-        public CurveFloat3AnimationTrack scaleTrack;
-
-        public void OnStart(AnimationCapture animCapture)
-        {
-            this.AnimCapture = animCapture;
-            if (position.Value) positionTrack = animCapture.Animation.AddTrack<CurveFloat3AnimationTrack>();
-            if (rotation.Value) rotationTrack = animCapture.Animation.AddTrack<CurveFloatQAnimationTrack>();
-            if (scale.Value) scaleTrack = animCapture.Animation.AddTrack<CurveFloat3AnimationTrack>();
-        }
-        public void OnUpdate(float T)
-        {
-            Slot ruut = AnimCapture.RootSlot;
-            positionTrack?.InsertKeyFrame(ruut.GlobalPointToLocal(slot.Target?.GlobalPosition ?? float3.Zero), T);
-            rotationTrack?.InsertKeyFrame(ruut.GlobalRotationToLocal(slot.Target?.GlobalRotation ?? floatQ.Identity), T);
-            scaleTrack?.InsertKeyFrame(ruut.GlobalScaleToLocal(slot.Target?.GlobalScale ?? float3.Zero), T);
-        }
-        public void OnStop() { }
-        public void OnReplace(Animator anim)
-        {
-            Slot root = AnimCapture.RootSlot;
-            ResultTypeEnum rte = ResultType.Value;
-            if (rte == ResultTypeEnum.DO_NOTHING)
-            {
-                if (positionTrack != null) { anim.Fields.Add(); }
-                if (rotationTrack != null) { anim.Fields.Add(); }
-                if (scaleTrack != null) { anim.Fields.Add(); }
-                return;
-            }
-
-            Slot s = root.AddSlot((rte == ResultTypeEnum.CREATE_VISUAL || rte == ResultTypeEnum.CREATE_NON_PERSISTENT_VISUAL) ? "Visual" : "Empty Object", rte != ResultTypeEnum.CREATE_NON_PERSISTENT_VISUAL);
-            if (positionTrack != null) { anim.Fields.Add().Target = s.Position_Field; }
-            if (rotationTrack != null) { anim.Fields.Add().Target = s.Rotation_Field; }
-            if (scaleTrack != null) { anim.Fields.Add().Target = s.Scale_Field; }
-            if (rte == ResultTypeEnum.CREATE_VISUAL || rte == ResultTypeEnum.CREATE_NON_PERSISTENT_VISUAL)
-            {
-                CrossMesh mesh = root.GetComponentOrAttach<CrossMesh>();
-                mesh.Size.Value = 0.05f;
-                mesh.BarRatio.Value = 0.05f;
-                PBS_Metallic mat = root.GetComponentOrAttach<PBS_Metallic>();
-                mat.EmissiveColor.Value = new color(0.5f, 0.5f, 0.5f);
-                MeshRenderer meshRenderer = s.AttachComponent<MeshRenderer>();
-                meshRenderer.Mesh.Target = mesh;
-                meshRenderer.Materials.Add(mat);
-            }
-            else if (rte == ResultTypeEnum.CREATE_PARENT_SLOTS)
-            {
-                Slot old = slot.Target;
-                old.SetParent(s, false);
-                if (positionTrack != null) { old.LocalPosition = new float3(0, 0, 0); }
-                if (rotationTrack != null) { old.LocalRotation = floatQ.Identity; }
-                if (scaleTrack != null) { old.LocalScale = new float3(1, 1, 1); }
-            }
-            else if (rte == ResultTypeEnum.REPLACE_REFERENCES)
-            {
-                foreach (SyncRef<Slot> it in references) { it.Target = s; }
-                foreach (SlotListReference it in listReferences) { it.list.Target[it.index.Value] = s; }
-            }
-        }
-        public void Clean()
-        {
-            positionTrack = null; rotationTrack = null; scaleTrack = null;
-        }
     }
 }
