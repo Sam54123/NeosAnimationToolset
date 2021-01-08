@@ -27,10 +27,9 @@ namespace NeosAnimationToolset
 
         public readonly SyncRef<Slot> rootSlot;
 
-        public readonly SyncList<TrackedRig> recordedRigs;
-
+        public readonly SyncList<TrackedSkinnedMeshRenderer> recordedSMR;
+        public readonly SyncList<TrackedMeshRenderer> recordedMR;
         public readonly SyncList<TrackedSlot> recordedSlots;
-
         public readonly SyncList<FieldTracker> recordedFields;
 
         public readonly SyncRef<StaticAnimationProvider> _result;
@@ -66,9 +65,10 @@ namespace NeosAnimationToolset
             {
                 Animator animator = rootSlot.Target.AttachComponent<Animator>();
                 animator.Clip.Target = _result.Target;
-                foreach (TrackedRig it in recordedRigs) { it.OnReplace(animator); it.Clean(); }
-                foreach (TrackedSlot it in recordedSlots) { it.OnReplace(animator); it.Clean(); }
-                foreach (FieldTracker it in recordedFields) { it.OnReplace(animator); it.Clean(); }
+                foreach (ITrackable it in recordedSMR) { it.OnReplace(animator); it.Clean(); }
+                foreach (ITrackable it in recordedMR) { it.OnReplace(animator); it.Clean(); }
+                foreach (ITrackable it in recordedSlots) { it.OnReplace(animator); it.Clean(); }
+                foreach (ITrackable it in recordedFields) { it.OnReplace(animator); it.Clean(); }
                 state.Value = 0;
             }
             else if (state.Value == 1)
@@ -82,9 +82,10 @@ namespace NeosAnimationToolset
                 recordingUser.Target = LocalUser;
                 state.Value = 1;
                 _startTime.Value = base.Time.WorldTime;
-                foreach (TrackedRig it in recordedRigs) { it.OnStart(this); }
-                foreach (TrackedSlot it in recordedSlots) { it.OnStart(this); }
-                foreach (FieldTracker it in recordedFields) { it.OnStart(this); }
+                foreach (ITrackable it in recordedSMR) { it.OnStart(this); it.OnUpdate(0);}
+                foreach (ITrackable it in recordedMR) { it.OnStart(this); it.OnUpdate(0);}
+                foreach (ITrackable it in recordedSlots) { it.OnStart(this); it.OnUpdate(0);}
+                foreach (ITrackable it in recordedFields) { it.OnStart(this); it.OnUpdate(0);}
             }
         }
 
@@ -97,9 +98,10 @@ namespace NeosAnimationToolset
             if (usr == LocalUser)
             {
                 float t = (float)(base.Time.WorldTime - _startTime);
-                foreach (TrackedRig it in recordedRigs) { it.OnUpdate(t); }
-                foreach (TrackedSlot it in recordedSlots) { it.OnUpdate(t); }
-                foreach (FieldTracker it in recordedFields) { it.OnUpdate(t); }
+                foreach (ITrackable it in recordedSMR) { it.OnUpdate(t); }
+                foreach (ITrackable it in recordedMR) { it.OnUpdate(t); }
+                foreach (ITrackable it in recordedSlots) { it.OnUpdate(t); }
+                foreach (ITrackable it in recordedFields) { it.OnUpdate(t); }
             }
         }
 
@@ -109,9 +111,10 @@ namespace NeosAnimationToolset
             float t = (float)(base.Time.WorldTime - _startTime);
             animation.GlobalDuration = t;
 
-            foreach (TrackedRig rig in recordedRigs) { rig.OnUpdate(t); rig.OnStop(); }
-            foreach (TrackedSlot slot in recordedSlots) { slot.OnUpdate(t); slot.OnStop(); }
-            foreach (FieldTracker field in recordedFields) { field.OnUpdate(t); field.OnStop(); }
+            foreach (ITrackable it in recordedSMR) { it.OnUpdate(t); it.OnStop(); }
+            foreach (ITrackable it in recordedMR) { it.OnUpdate(t); it.OnStop(); }
+            foreach (ITrackable it in recordedSlots) { it.OnUpdate(t); it.OnStop(); }
+            foreach (ITrackable it in recordedFields) { it.OnUpdate(t); it.OnStop(); }
             await default(ToBackground);
 
             string tempFilePath = Engine.LocalDB.GetTempFilePath("animx");
